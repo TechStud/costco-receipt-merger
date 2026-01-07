@@ -1,78 +1,110 @@
 # 🧾 Costco Receipt Merger
 
-A browser-based tool for intelligently merging multiple local Costco receipt files (JSON) with automatic deduplication and data completion.
-
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.0-green.svg)
+![Version](https://img.shields.io/badge/version-0.2.3-green.svg)
+
+A **browser-based tool** for intelligently merging multiple local Costco receipt JSON files (including from additional family members) into a single canonical, deduplicated, and schema-complete dataset.
+
+All processing is done **locally in your browser** — no data ever leaves your machine.
+
+---
 
 ## ✨ Features
 
-- 🎯 **Intelligent Merging** - Deep merges receipt data to fill in missing fields
-- 🔍 **Smart Deduplication** - Uses transaction barcode + membership number as unique key
-- 📊 **Completeness Scoring** - Automatically updates incomplete receipts with complete data
-- 📈 **Detailed Statistics** - Real-time stats showing updates, duplicates, and new receipts
-- 🎨 **Modern UI** - Drag-and-drop interface with live logging
-- 🔒 **Privacy First** - All processing happens locally in your browser
-- 💾 **No Installation** - Just open and use
+| _Feature_                    	| _Description_                                                                                                                                                                                                                                                                                       	|
+|------------------------------	|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	|
+| 🔍 **Smart Deduplication**    	| * Merges all Receipts, then deduplicates to create the most complete version possible.<br>* Receipts are uniquely identified using membershipNumber + transactionBarcode as unique key<br> ↳ Good for multi-member families to merge all receipts into a single file.                               	|
+| 📄 **Schema-Complete Output** 	| * The final JSON conforms to a locked canonical schema with all expected fields present                                                                                                                                                                                                             	|
+| 🔀 **Lossless Merge Logic**   	| * Scalars prefer non-null values<br>* Objects are deep-merged<br>* Arrays are merged intelligently:<br> ↳ `itemArray` preserves adjacency and order<br> ↳ `couponArray` and `tenderArray` merge by identity                                                                                         	|
+| 🎨 **Modern UI**              	| * **Drag-and-Drop** interface with **Per-File Context**<br> ↳ Receipt count per file<br> ↳ Oldest --> newest transaction date range<br><br>* **Structured Merge Logs**<br> ↳ Clean, column-aligned summaries<br> ↳ Easy to digest or copy for reference<br><br>* **Progress Feedback** during merge 	|
+| 🔐 **Privacy First**          	| * All processing happens locally in your browser                                                                                                                                                                                                                                                    	|
+| 👍 **No Installation**        	| * Just open and use                                                                                                                                                                                                                                                                                 	|
 
 ## 🚀 Quick Start
 
-### Option 1: Use GitHub Pages (Recommended)
+### Option A - Use Hosted Version
 
 Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https://TechStud.github.io/costco-receipt-merger/)**
 
-### Option 2: Run Locally
+### Option B - Run Locally
 
-1. Download or clone this repository:
+1. Clone the repository:
 ```bash
    git clone https://github.com/TechStud/costco-receipt-merger.git
 ```
 
-2. Open `index.html` in any modern browser (Chrome, Firefox, Edge, Safari)
+2. Open `index.html` in any modern browser (Safari, Chrome, Firefox, Edge)
 
 3. Start merging your receipt files!
 
 ## 📖 How to Use
 
-1. **Load Files**
+1. **Add Receipt Files**
    - Drag and drop your JSON receipt files into the drop zone
    - Or click the drop zone to browse and select files
-   - You can load multiple files at once
 
 2. **Review Files**
-   - See the list of loaded files with receipt counts
-   - Remove any files you don't want to include
+   - Each file will show the Receipt Counts and Transaction Date range
+   - Remove any files you don't want to include before merging
 
-3. **Merge**
-   - Click "Merge & Download" button
-   - Review the statistics in the panel
-   - The merged file will automatically download
+3. **Merge & Save**
+   - Click "Merge & Save" button
+   - Review the structured merge summary in the log panel below
 
-4. **Check Results**
-   - View the detailed log to see what was merged/updated
-   - Statistics show: new receipts, updated receipts, and duplicates removed
+4. **Download**
+   - A single merged file will be automatically saved with a date-stamped name (eg: Costco_Receipts_MERGED_YYYY-MM-DD.json)
 
-## 🔧 How It Works
 
-### Intelligent Merge Algorithm
+## 📌 Example Merge Log Output
 
-The tool uses a two-pass merge algorithm:
+```
+[9:21:36 AM] Merge started
+[9:21:36 AM] Total receipt files selected: 5
 
-1. **First Pass**: Index all receipts by unique key (`membershipNumber-transactionBarcode`)
-2. **Second Pass**: For each receipt:
-   - If it exists: Deep merge and calculate completeness scores
-   - If merge improves data: Update and mark as "updated"
-   - If identical: Skip as duplicate
-   - If new: Add to collection
+[9:21:36 AM]  1. costco-receipts-2025-11-21.json
+[9:21:36 AM]     ↳     9 Receipts · 2025-02-01 → 2025-02-22
+[9:21:36 AM]  2. costco-receipts-2025-11-18.json
+[9:21:36 AM]     ↳    89 Receipts · 2025-01-02 → 2025-11-15
 
-### Completeness Scoring
+[9:21:36 AM] Total receipts across all files: 866
 
-Each receipt is scored based on:
-- Critical fields (transaction data, warehouse info, financial totals)
-- Array presence (items, tenders, coupons)
-- Nested object completeness (taxes)
+[9:21:36 AM] Merge complete
+[9:21:36 AM] ↳ 261 unique receipts produced
+[9:21:36 AM] ↳ Output file: Costco_Receipts_MERGED_2026-01-07.json
+```
 
-When duplicate receipts are found, the tool merges them to create the most complete version possible.
+
+## 🧠 How It Works
+
+1. Lossless Merge Phase
+   - All receipts from all files are evaluated together
+   - Receipts sharing the same identity key are merged
+   - More complete data is preserved without overwriting existing values
+
+2. Canonical Normalization (Terminal Step)
+   - After merging, receipts are normalized into a fixed schema
+   - Missing fields become null
+   - All expected arrays exist, even if empty
+
+3. Final Output
+   - Receipts are sorted oldest → newest
+   - Output is saved as a single, clean JSON file
+
+## 🔐 Privacy & Security
+
+- **100% Local Processing** - All merging happens in your browser
+- **No Server** - No data is uploaded or stored anywhere
+- **No Tracking** - No analytics or external requests
+- **Secure** - Your receipt data never leaves your device
+
+## 📦 Related Tools
+
+If you need to **download** your Costco receipts first, visit this tool:
+- **Costco Receipt Downloader (TCRD)**
+https://techstud.github.io/TCRDD/Downloader/
+
+This **Costco Receipt Merger** tool assumes you already have multiple Costco receipt JSON files ready to use.
+
 
 ### Data Structure
 
@@ -103,27 +135,21 @@ The tool expects Costco receipt JSON files with this structure:
 ## 🛠️ Technical Details
 
 - **Technology**: Pure HTML/CSS/JavaScript (no dependencies)
-- **Browser Support**: Modern browsers with File API support
-- **File Size**: Single HTML file (~15KB)
+- **Browser Support**: Modern browsers with File support
+- **File Size**: Single HTML file
 - **Processing**: Client-side only - no data leaves your device
 - **Performance**: Handles thousands of receipts efficiently
 
-## 🔐 Privacy & Security
-
-- **100% Local Processing** - All merging happens in your browser
-- **No Server** - No data is uploaded or stored anywhere
-- **No Tracking** - No analytics or external requests
-- **Secure** - Your receipt data never leaves your device
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! 
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. **Fork** the repository
+2. **Create** your feature branch (`git checkout -b feature/AmazingFeature`)
+3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** to the branch (`git push origin feature/AmazingFeature`)
+5. **Submit** a Pull Request
 
 ## 📝 License
 
@@ -132,20 +158,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Inspired by [TechStud's Costco Receipt Downloader (TCRD)](https://github.com/TechStud/TCRDD/Downloader)
-- Built to complement the Costco receipt download workflow
-
-## 📧 Contact
-
-Your Name - [@TechStud](https://github.com/TechStud)
-
-Project Link: [https://github.com/TechStud/costco-receipt-merger](https://github.com/TechStud/costco-receipt-merger)
+- Built to complement the Costco receipt download workflow.
 
 ## ⚠️ Disclaimer
 
-This tool is for personal use only. The author is not affiliated with, endorsed by, or supported by Costco Wholesale Corporation. Use at your own risk.
+This tool is for personal use only. The author and this project are not affiliated with, endorsed or supported by Costco Wholesale Corporation. Use at your own risk.
 
 **SENSITIVE DATA WARNING**: Downloaded receipts contain sensitive purchase and payment data. Keep all files secure and treat them accordingly.
 
 ---
 
-**Note**: This tool works when separate JSON files were exported from Costco's receipt system and you want to merge them all into a single file. This project does not download receipts itself - instead use the [Costco Receipt Downloader](https://github.com/TechStud/TCRDD/Downloader) for that purpose.
+**Note**: This tool works when separate JSON files were exported from Costco's receipt system and you want to merge them all into a single canonical, deduplicated, and schema-complete dataset file. This project does not download receipts itself - instead use the [Costco Receipt Downloader](https://github.com/TechStud/TCRDD/Downloader) for that purpose.
