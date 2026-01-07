@@ -2,6 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-0.2.3-green.svg)
+[![Changelog](https://img.shields.io/badge/changelog-updates-brightgreen)](CHANGELOG.md)
 
 A **browser-based tool** for intelligently merging multiple local Costco receipt JSON files (including from additional family members) into a single canonical, deduplicated, and schema-complete dataset.
 
