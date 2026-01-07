@@ -1,638 +1,590 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Costco Receipt Merger</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      min-height:100vh;padding:20px;display:flex;justify-content:center;align-items:center
+    }
+    .container{
+      background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);
+      max-width:900px;width:100%;padding:40px
+    }
+    h1{color:#333;margin-bottom:6px;font-size:28px}
+    .subtitle{color:#666;margin-bottom:24px;font-size:14px}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .intro-panel{
+      background:#f7f8ff;
+      border-left:4px solid #667eea;
+      padding:14px 16px;
+      margin-bottom:24px;
+      border-radius:8px
+    }
+    .intro-text{
+      font-size:14px;
+      color:#444;
+      margin-bottom:8px;
+      line-height:1.5
+    }
+    .intro-steps{
+      padding-left:18px;
+      font-size:13px;
+      color:#555
+    }
+    .intro-steps li{margin:4px 0}
 
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 900px;
-            width: 100%;
-            padding: 40px;
-        }
+    .drop-zone{
+      border:3px dashed #667eea;border-radius:12px;padding:60px 20px;text-align:center;
+      background:#f8f9ff;cursor:pointer;margin-bottom:30px;transition:.3s
+    }
+    .drop-zone.drag-over{border-color:#764ba2;background:#f0f2ff;transform:scale(1.02)}
+    .drop-zone-icon{font-size:48px;margin-bottom:12px}
+    .file-list{margin-bottom:20px}
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
+    .file-info{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
+    .file-name{
+      font-weight:600;
+      color:#333;
+    }
 
-        .drop-zone {
-            border: 3px dashed #667eea;
-            border-radius: 12px;
-            padding: 60px 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            background: #f8f9ff;
-            cursor: pointer;
-            margin-bottom: 30px;
-        }
+    .file-meta{
+      font-size:12px;
+      color:#666;
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
 
-        .drop-zone:hover, .drop-zone.drag-over {
-            border-color: #764ba2;
-            background: #f0f2ff;
-            transform: scale(1.02);
-        }
+    .meta-count{
+      min-width:90px; /* column alignment */
+    }
 
-        .drop-zone-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
+    .meta-sep{
+      opacity:0.6;
+    }
 
-        .drop-zone-text {
-            color: #666;
-            font-size: 16px;
-        }
+    .meta-dates{
+      font-family:monospace;
+    }
 
-        .file-list {
-            margin-bottom: 20px;
-        }
 
-        .file-item {
-            background: #f5f5f5;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s ease;
-        }
+    .file-item{
+      background:#f5f5f5;padding:12px 16px;border-radius:8px;
+      display:flex;justify-content:space-between;align-items:center;margin-bottom:8px
+    }
+    .remove-btn{
+      background:#ff4757;color:#fff;border:none;padding:6px 12px;border-radius:6px;
+      cursor:pointer;font-size:12px
+    }
 
-        .file-item:hover {
-            background: #ebebeb;
-        }
+    .progress-hint{
+      margin-top:12px;
+      font-size:13px;
+      color:#555;
+      display:none
+    }
+    .progress-hint.visible{display:block}
 
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+    .action-buttons{display:flex;gap:12px;margin-top:20px}
+    .btn{flex:1;padding:14px;border:none;border-radius:8px;font-size:16px;font-weight:600}
+    .btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+    .btn-secondary{background:#eee}
+    .btn:disabled{opacity:.5}
 
-        .file-icon {
-            font-size: 24px;
-        }
-
-        .file-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .file-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .file-stats {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .remove-btn {
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background 0.2s ease;
-        }
-
-        .remove-btn:hover {
-            background: #ff3838;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .btn-secondary:hover {
-            background: #e0e0e0;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .stats-panel {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 20px;
-        }
-
-        .stats-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .stat-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        .log-panel {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            display: none;
-        }
-
-        .log-panel.visible {
-            display: block;
-        }
-
-        .log-entry {
-            margin-bottom: 8px;
-            line-height: 1.6;
-        }
-
-        .log-success { color: #4ec9b0; }
-        .log-warning { color: #dcdcaa; }
-        .log-error { color: #f48771; }
-        .log-info { color: #569cd6; }
-
-        .hidden {
-            display: none;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-    </style>
+    .stats-panel{margin-top:20px;display:none}
+    .log-panel{
+      background:#1e1e1e;color:#d4d4d4;margin-top:20px;padding:16px;
+      border-radius:8px;font-family:monospace;font-size:13px;max-height:300px;overflow:auto;display:none;white-space: pre-wrap;
+    }
+    .log-panel.visible{display:block}
+    .log-success{color:#4ec9b0}
+    .log-warning{color:#dcdcaa}
+    .log-error{color:#f48771}
+    .log-info{color:#569cd6}
+    input[type=file]{display:none}
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🧾 Costco Receipt Merger</h1>
-        <p class="subtitle">Merge multiple of your Costco Receipt files (eg: Costco_In-Warehouse_Receipts_*.json) with intelligent deduplication and data completion.</p>
+  <div class="container">
+    <h1 id="documentTitle"></h1>
+    <p class="subtitle">A browser-based tool for intelligently merging multiple local Costco receipt JSON files.</p>
+    <div class="intro-panel">
+      <p class="intro-text">
+        This tool combines multiple Costco receipt JSON files into a single, clean, consolidated file.
+        Duplicate receipts are safely merged, all available data is preserved, and the output is
+        standardized for long-term storage or analysis.
+      </p>
 
-        <div class="drop-zone" id="dropZone">
-            <div class="drop-zone-icon">📁</div>
-            <div class="drop-zone-text">
-                <strong>Drop your JSON formatted Costco Receipt files here</strong> or click to browse
-            </div>
-        </div>
-        <input type="file" id="fileInput" accept=".json" multiple>
-
-        <div class="file-list" id="fileList"></div>
-
-        <div class="action-buttons">
-            <button class="btn btn-secondary" id="clearBtn">Clear All</button>
-            <button class="btn btn-primary" id="mergeBtn" disabled>Merge & Save</button>
-        </div>
-
-        <div class="stats-panel hidden" id="statsPanel">
-            <div class="stats-title">📊 Merge Statistics</div>
-            <div class="stats-grid" id="statsGrid"></div>
-        </div>
-
-        <div class="log-panel" id="logPanel"></div>
+      <ol class="intro-steps">
+        <li>Add <strong>two or more</strong> Costco receipt JSON files</li>
+        <li>Review the selected files</li>
+        <li>Click <strong>Merge &amp; Save</strong> to download the merged file</li>
+      </ol>
     </div>
 
-    <script>
-        // State management
-        let loadedFiles = [];
-        let allReceipts = [];
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">📁</div>
+      <strong>Drop Costco receipt JSON files here</strong><br/>or click to browse
+    </div>
+    <input type="file" id="fileInput" accept=".json" multiple>
 
-        // DOM elements
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const clearBtn = document.getElementById('clearBtn');
-        const mergeBtn = document.getElementById('mergeBtn');
-        const statsPanel = document.getElementById('statsPanel');
-        const statsGrid = document.getElementById('statsGrid');
-        const logPanel = document.getElementById('logPanel');
+    <div class="file-list" id="fileList"></div>
 
-        // Logging utility
-        function log(message, type = 'info') {
-            const entry = document.createElement('div');
-            entry.className = `log-entry log-${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            logPanel.appendChild(entry);
-            logPanel.scrollTop = logPanel.scrollHeight;
-            logPanel.classList.add('visible');
-        }
+    <div class="action-buttons">
+      <button class="btn btn-secondary" id="clearBtn">Clear</button>
+      <button class="btn btn-primary" id="mergeBtn" disabled>Merge & Save</button>
+    </div>
+    <div class="progress-hint" id="progressHint">
+      Processing receipts… please wait.
+    </div>
 
-        // Deep merge function (same logic as fixed script)
-        function deepMergeReceipts(oldReceipt, newReceipt) {
-            const merged = { ...oldReceipt };
-            
-            for (const key in newReceipt) {
-                const newVal = newReceipt[key];
-                const oldVal = merged[key];
-                
-                if (newVal === null || newVal === undefined) continue;
-                
-                if (oldVal === null || oldVal === undefined) {
-                    merged[key] = newVal;
-                    continue;
-                }
-                
-                if (Array.isArray(newVal)) {
-                    if (!Array.isArray(oldVal) || newVal.length > oldVal.length) {
-                        merged[key] = newVal;
-                    } else if (newVal.length === oldVal.length && newVal.length > 0) {
-                        merged[key] = oldVal.map((item, idx) => {
-                            if (typeof item === 'object' && typeof newVal[idx] === 'object') {
-                                return deepMergeReceipts(item, newVal[idx]);
-                            }
-                            return newVal[idx] !== null && newVal[idx] !== undefined ? newVal[idx] : item;
-                        });
-                    }
-                    continue;
-                }
-                
-                if (typeof newVal === 'object' && typeof oldVal === 'object') {
-                    merged[key] = deepMergeReceipts(oldVal, newVal);
-                    continue;
-                }
-                
-                if (!oldVal || (typeof oldVal === 'string' && oldVal.trim() === '')) {
-                    merged[key] = newVal;
-                } else if (newVal && (typeof newVal !== 'string' || newVal.trim() !== '')) {
-                    merged[key] = newVal;
-                }
-            }
-            
-            return merged;
-        }
+    <div class="stats-panel" id="statsPanel"></div>
+    <div class="log-panel" id="logPanel"></div>
+  </div>
 
-        // Calculate completeness score
-        function calculateCompleteness(receipt) {
-            let score = 0;
-            let total = 0;
-            
-            const checkValue = (val) => {
-                total++;
-                if (val !== null && val !== undefined && val !== '') score++;
-            };
-            
-            const mainFields = [
-                'transactionBarcode', 'membershipNumber', 'transactionDateTime',
-                'warehouseName', 'total', 'subTotal', 'taxes'
-            ];
-            mainFields.forEach(field => checkValue(receipt[field]));
-            
-            total++;
-            if (Array.isArray(receipt.itemArray) && receipt.itemArray.length > 0) score++;
-            
-            total++;
-            if (Array.isArray(receipt.tenderArray) && receipt.tenderArray.length > 0) score++;
-            
-            total++;
-            if (receipt.subTaxes && typeof receipt.subTaxes === 'object' && Object.keys(receipt.subTaxes).length > 0) score++;
-            
-            return total > 0 ? (score / total) : 0;
-        }
+  <script>
+    const appVersion = '0.2.3';
+    document.title = `Costco Receipt Merger v${appVersion}`;
+    const titleElement = document.getElementById('documentTitle');
+    titleElement.textContent = `🧾 ${document.title}`;
 
-        // File handling
-        dropZone.addEventListener('click', () => fileInput.click());
-        
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
-        
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            handleFiles(e.dataTransfer.files);
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
+// ===============================
+// Canonical Schema (LOCKED)
+// ===============================
 
-        async function handleFiles(files) {
-            for (const file of files) {
-                if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-                    log(`Skipped ${file.name} (not a JSON file)`, 'warning');
-                    continue;
-                }
-                
-                try {
-                    const text = await file.text();
-                    const data = JSON.parse(text);
-                    
-                    if (!Array.isArray(data)) {
-                        log(`Error: ${file.name} is not an array of receipts`, 'error');
-                        continue;
-                    }
-                    
-                    loadedFiles.push({
-                        name: file.name,
-                        receipts: data,
-                        count: data.length
-                    });
-                    
-                    log(`Loaded ${file.name} with ${data.length} receipts`, 'success');
-                } catch (err) {
-                    log(`Error parsing ${file.name}: ${err.message}`, 'error');
-                }
-            }
-            
-            updateUI();
-        }
+    const CANONICAL_RECEIPT = () => ({
+      documentType:null,
+      receiptType:null,
+      membershipNumber:null,
+      transactionType:null,
+      transactionDateTime:null,
+      transactionDate:null,
+      warehouseShortName:null,
+      warehouseNumber:null,
+      warehouseName:null,
+      warehouseAddress1:null,
+      warehouseAddress2:null,
+      warehouseCity:null,
+      warehouseState:null,
+      warehouseCountry:null,
+      warehousePostalCode:null,
+      warehouseAreaCode:null,
+      warehousePhone:null,
+      companyNumber:null,
+      transactionBarcode:null,
+      totalItemCount:null,
+      instantSavings:null,
+      subTotal:null,
+      taxes:null,
+      total:null,
+      registerNumber:null,
+      transactionNumber:null,
+      operatorNumber:null,
+      itemArray:[],
+      couponArray:[],
+      subTaxes:CANONICAL_SUBTAXES(),
+      tenderArray:[]
+    });
 
-        function updateUI() {
-            fileList.innerHTML = '';
-            
-            loadedFiles.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                item.innerHTML = `
-                    <div class="file-info">
-                        <div class="file-icon">📄</div>
-                        <div class="file-details">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-stats">${file.count} receipts</div>
-                        </div>
-                    </div>
-                    <button class="remove-btn" onclick="removeFile(${index})">Remove</button>
-                `;
-                fileList.appendChild(item);
-            });
-            
-            mergeBtn.disabled = loadedFiles.length < 2;
-        }
+    const CANONICAL_ITEM = () => ({
+      itemNumber:null,
+      itemUPCNumber:null,
+      itemDescription01:null,
+      itemDescription02:null,
+      frenchItemDescription1:null,
+      frenchItemDescription2:null,
+      itemIdentifier:null,
+      itemDepartmentNumber:null,
+      transDepartmentNumber:null,
+      itemUnitPriceAmount:null,
+      unit:null,
+      amount:null,
+      taxFlag:null,
+      refundFlag:null,
+      resaleFlag:null,
+      voidFlag:null,
+      merchantID:null,
+      entryMethod:null,
+      fuelUnitQuantity:null,
+      fuelUomCode:null,
+      fuelUomDescription:null,
+      fuelUomDescriptionFr:null,
+      fuelGradeCode:null,
+      fuelGradeDescription:null,
+      fuelGradeDescriptionFr:null
+    });
 
-        window.removeFile = function(index) {
-            log(`Removed ${loadedFiles[index].name}`, 'info');
-            loadedFiles.splice(index, 1);
-            updateUI();
-            if (loadedFiles.length === 0) {
-                statsPanel.classList.add('hidden');
-            }
-        };
+    const CANONICAL_COUPON = () => ({
+      couponNumber:null,
+      upcnumberCoupon:null,
+      associatedItemNumber:null,
+      unitCoupon:null,
+      amountCoupon:null,
+      taxflagCoupon:null,
+      voidflagCoupon:null,
+      refundflagCoupon:null
+    });
 
-        clearBtn.addEventListener('click', () => {
-            loadedFiles = [];
-            allReceipts = [];
-            logPanel.innerHTML = '';
-            logPanel.classList.remove('visible');
-            statsPanel.classList.add('hidden');
-            updateUI();
-            log('Cleared all files', 'info');
-        });
+    const CANONICAL_SUBTAXES = () => ({
+      tax1:null,
+      tax2:null,
+      tax3:null,
+      tax4:null,
+      aTaxPercent:null,
+      aTaxLegend:null,
+      aTaxAmount:null,
+      aTaxPrintCode:null,
+      aTaxPrintCodeFR:null,
+      aTaxIdentifierCode:null,
+      bTaxPercent:null,
+      bTaxLegend:null,
+      bTaxAmount:null,
+      bTaxPrintCode:null,
+      bTaxPrintCodeFR:null,
+      bTaxIdentifierCode:null,
+      cTaxPercent:null,
+      cTaxLegend:null,
+      cTaxAmount:null,
+      cTaxIdentifierCode:null,
+      dTaxPercent:null,
+      dTaxLegend:null,
+      dTaxAmount:null,
+      dTaxPrintCode:null,
+      dTaxPrintCodeFR:null,
+      dTaxIdentifierCode:null,
+      uTaxLegend:null,
+      uTaxAmount:null,
+      uTaxableAmount:null
+    });
 
-        mergeBtn.addEventListener('click', () => {
-            log('Starting merge process...', 'info');
-            mergeReceipts();
-        });
+    const CANONICAL_TENDER = () => ({
+      tenderTypeCode:null,
+      tenderSubTypeCode:null,
+      tenderTypeName:null,
+      tenderTypeNameFr:null,
+      tenderDescription:null,
+      amountTender:null,
+      displayAccountNumber:null,
+      sequenceNumber:null,
+      approvalNumber:null,
+      responseCode:null,
+      transactionID:null,
+      merchantID:null,
+      entryMethod:null,
+      tenderAcctTxnNumber:null,
+      tenderAuthorizationCode:null,
+      tenderEntryMethodDescription:null,
+      walletType:null,
+      walletId:null
+    });
 
-        function mergeReceipts() {
-            const receiptMap = new Map();
-            let totalInputReceipts = 0;
-            let receiptsUpdated = 0;
-            let duplicatesSkipped = 0;
-            let newReceipts = 0;
-            const memberStats = new Map();
+// ===============================
+// Utilities
+// ===============================
+    const logPanel=document.getElementById('logPanel');
+    
+    function log(msg,type='info'){
+      const d=document.createElement('div');
+      d.className=`log-${type}`;
+      d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+      logPanel.appendChild(d);
+      logPanel.classList.add('visible');
+      logPanel.scrollTop=logPanel.scrollHeight;
+    }
 
-            // Collect all receipts
-            const allReceiptsArray = [];
-            loadedFiles.forEach(file => {
-                totalInputReceipts += file.count;
-                allReceiptsArray.push(...file.receipts);
-            });
+// ===============================
+// LOSSLESS MERGE HELPERS
+// ===============================
 
-            log(`Processing ${totalInputReceipts} receipts from ${loadedFiles.length} files...`, 'info');
+    function mergeScalars(a, b){
+      if (a === undefined) return b;
+      if (b === undefined) return a;
+      if (a === null) return b;
+      if (b === null) return a;
+  return a; // deterministic: first wins if both real
+}
 
-            // Process receipts
-            allReceiptsArray.forEach((receipt, idx) => {
-                const memberId = receipt.membershipNumber || 'UNKNOWN';
-                
-                if (!receipt.transactionBarcode || receipt.transactionBarcode.length < 15) {
-                    duplicatesSkipped++;
-                    return;
-                }
-                
-                const uniqueKey = `${memberId}-${receipt.transactionBarcode}`;
-                
-                // Initialize member stats
-                if (!memberStats.has(memberId)) {
-                    memberStats.set(memberId, { total: 0, updated: 0, new: 0 });
-                }
-                
-                if (receiptMap.has(uniqueKey)) {
-                    const existing = receiptMap.get(uniqueKey);
-                    const oldReceipt = existing.receipt;
-                    
-                    const oldScore = calculateCompleteness(oldReceipt);
-                    const newScore = calculateCompleteness(receipt);
-                    
-                    const mergedReceipt = deepMergeReceipts(oldReceipt, receipt);
-                    const mergedScore = calculateCompleteness(mergedReceipt);
-                    
-                    if (mergedScore > oldScore || JSON.stringify(mergedReceipt) !== JSON.stringify(oldReceipt)) {
-                        receiptMap.set(uniqueKey, { receipt: mergedReceipt });
-                        receiptsUpdated++;
-                        memberStats.get(memberId).updated++;
-                        log(`Updated receipt ${receipt.transactionBarcode} (completeness: ${(oldScore*100).toFixed(0)}% → ${(mergedScore*100).toFixed(0)}%)`, 'success');
-                    } else {
-                        duplicatesSkipped++;
-                    }
-                } else {
-                    receiptMap.set(uniqueKey, { receipt });
-                    newReceipts++;
-                    memberStats.get(memberId).new++;
-                }
-                
-                memberStats.get(memberId).total++;
-            });
+function mergeObjects(a={}, b={}){
+  const out = {...a};
+  for(const k in b){
+    if(!(k in out)){
+      out[k] = b[k];
+    } else if(
+      typeof out[k] === 'object' && out[k] !== null &&
+      typeof b[k] === 'object' && b[k] !== null &&
+      !Array.isArray(out[k])
+      ){
+      out[k] = mergeObjects(out[k], b[k]);
+    } else {
+      out[k] = mergeScalars(out[k], b[k]);
+    }
+  }
+  return out;
+}
 
-            const finalReceipts = Array.from(receiptMap.values()).map(item => item.receipt);
-            
-            // Sort chronologically
-            finalReceipts.sort((a, b) => new Date(a.transactionDateTime) - new Date(b.transactionDateTime));
+function mergeIdentityArray(a=[], b=[], idKey){
+  const map = new Map();
+  [...a, ...b].forEach(item=>{
+    const id = item?.[idKey];
+    if(id == null) return;
+    if(!map.has(id)){
+      map.set(id, {...item});
+    } else {
+      map.set(id, mergeObjects(map.get(id), item));
+    }
+  });
+  return [...map.values()];
+}
 
-            log(`Merge complete! ${finalReceipts.length} unique receipts`, 'success');
-            log(`  - ${newReceipts} new receipts`, 'info');
-            log(`  - ${receiptsUpdated} receipts updated with missing data`, 'info');
-            log(`  - ${duplicatesSkipped} exact duplicates skipped`, 'info');
+function mergeReceipt(a={}, b={}){
+  const out = {...a};
 
-            // Display statistics
-            displayStats({
-                totalInput: totalInputReceipts,
-                totalFiles: loadedFiles.length,
-                finalCount: finalReceipts.length,
-                updated: receiptsUpdated,
-                newReceipts: newReceipts,
-                duplicates: duplicatesSkipped,
-                members: memberStats.size
-            });
+  for(const k in b){
+    if(Array.isArray(b[k])){
+      if(k === 'itemArray'){
+        // Preserve raw order & adjacency — concat only
+        out[k] = [...(out[k] || []), ...b[k]];
+      } else if(k === 'couponArray'){
+        out[k] = mergeIdentityArray(out[k], b[k], 'upcnumberCoupon');
+      } else if(k === 'tenderArray'){
+        out[k] = mergeIdentityArray(out[k], b[k], 'tenderTypeCode');
+      } else {
+        out[k] = [...(out[k] || []), ...b[k]];
+      }
+    }
+    else if(typeof b[k] === 'object' && b[k] !== null){
+      out[k] = mergeObjects(out[k] || {}, b[k]);
+    }
+    else {
+      out[k] = mergeScalars(out[k], b[k]);
+    }
+  }
 
-            // Download
-            downloadMergedFile(finalReceipts);
-        }
+  return out;
+}
 
-        function displayStats(stats) {
-            statsGrid.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-label">Total Files</div>
-                    <div class="stat-value">${stats.totalFiles}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Input Receipts</div>
-                    <div class="stat-value">${stats.totalInput}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Final Unique</div>
-                    <div class="stat-value">${stats.finalCount}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Updated</div>
-                    <div class="stat-value">${stats.updated}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">New Added</div>
-                    <div class="stat-value">${stats.newReceipts}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Duplicates</div>
-                    <div class="stat-value">${stats.duplicates}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Members</div>
-                    <div class="stat-value">${stats.members}</div>
-                </div>
-            `;
-            statsPanel.classList.remove('hidden');
-        }
+// ==================================
+// CANONICAL NORMALIZATION (TERMINAL)
+// ==================================
+function normalizeObject(source, canonical){
+  const out = canonical();
+  for(const k in out){
+    if(Array.isArray(out[k])) continue;
+    if(typeof out[k]==='object' && out[k]!==null){
+      out[k]=normalizeObject(source?.[k]||{},()=>out[k]);
+    } else {
+      out[k]=(source && source[k]!==undefined)?source[k]:null;
+    }
+  }
+  return out;
+}
 
-        async function downloadMergedFile(receipts) {
-            const memberIds = [...new Set(receipts.map(r => r.membershipNumber).filter(Boolean))];
-            let filename = 'Costco_Receipts_MERGED.json';
-            
-            if (memberIds.length === 1) {
-                filename = `Costco_Receipts_${memberIds[0]}_MERGED.json`;
-            } else if (memberIds.length > 1) {
-                filename = `Costco_Receipts_${memberIds.length}-Members_MERGED.json`;
-            }
+function normalizeArray(arr, canonical, idKey){
+  if(!Array.isArray(arr)) return [];
+  const map=new Map();
+  arr.forEach(o=>{
+    const id=o?.[idKey];
+    if(id==null) return;
+    map.set(id, normalizeObject(o, canonical));
+  });
+  return [...map.values()];
+}
 
-            const dataStr = JSON.stringify(receipts, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
+function normalizeReceipt(r){
+  const out=normalizeObject(r,CANONICAL_RECEIPT);
+  out.itemArray=normalizeArray(r.itemArray,CANONICAL_ITEM,'itemNumber');
+  out.couponArray=normalizeArray(r.couponArray,CANONICAL_COUPON,'upcnumberCoupon');
+  out.subTaxes=normalizeObject(r.subTaxes,CANONICAL_SUBTAXES);
+  out.tenderArray=normalizeArray(r.tenderArray,CANONICAL_TENDER,'tenderTypeCode');
+  return out;
+}
 
-            try {
-                if ('showSaveFilePicker' in window) {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: filename,
-                        types: [{
-                            description: 'JSON File',
-                            accept: { 'application/json': ['.json'] }
-                        }]
-                    });
+// ===============================
+// File Handling & Merge
+// ===============================
+const dropZone=document.getElementById('dropZone');
+const fileInput=document.getElementById('fileInput');
+const fileList=document.getElementById('fileList');
+const mergeBtn=document.getElementById('mergeBtn');
+const clearBtn=document.getElementById('clearBtn');
+const progressHint=document.getElementById('progressHint');
+let files=[];
 
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    log(`Saved as: ${handle.name}`, 'success');
-                } else {
-                    throw new Error("File System Access API not supported");
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    const a = document.createElement('a');
-                    a.download = filename;
-                    a.href = window.URL.createObjectURL(blob);
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(a.href);
-                    log(`Downloaded as: ${filename}`, 'success');
-                }
-            }
-        }
-    </script>
+dropZone.onclick=()=>fileInput.click();
+dropZone.ondragover=e=>{e.preventDefault();dropZone.classList.add('drag-over')};
+dropZone.ondragleave=()=>dropZone.classList.remove('drag-over');
+dropZone.ondrop=e=>{
+  e.preventDefault();dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+};
+
+fileInput.onchange = async e => {
+  await handleFiles(e.target.files);
+  e.target.value = '';
+};
+
+function getReceiptDateRange(receipts){
+  let min = null;
+  let max = null;
+
+  receipts.forEach(r => {
+    if (!r.transactionDateTime) return;
+    const d = new Date(r.transactionDateTime);
+    if (isNaN(d)) return;
+
+    if (!min || d < min) min = d;
+    if (!max || d > max) max = d;
+  });
+
+  const fmt = d => d.toISOString().slice(0,10);
+
+  return {
+    minDate: min ? fmt(min) : null,
+    maxDate: max ? fmt(max) : null
+  };
+}
+
+
+async function handleFiles(flist){
+  for(const f of flist){
+    try {
+      const data=JSON.parse(await f.text());
+
+      if (!Array.isArray(data)) throw new Error('Not a receipt array');
+
+      if (files.some(x => x.name === f.name)) {
+        log(`File already added: ${f.name}`, 'warning');
+        continue;
+      }
+
+      files.push({name:f.name,data});
+      const d=document.createElement('div');
+      d.className='file-item';
+
+      const { minDate, maxDate } = getReceiptDateRange(data);
+
+      d.innerHTML = `
+  <div class="file-info">
+    <div class="file-name">${f.name}</div>
+    <div class="file-meta">
+      <span class="meta-count"> <b>↳</b> ${data.length} receipts</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-dates">
+        ${minDate && maxDate ? `${minDate} → ${maxDate}` : 'Date range unavailable'}
+      </span>
+    </div>
+  </div>
+  <button class="remove-btn">Remove</button>
+      `;
+
+
+      d.querySelector('button').onclick=()=>{
+        files=files.filter(x=>x.name!==f.name);
+        d.remove();
+      };
+      fileList.appendChild(d);
+    } catch (e) {
+      log(`Failed to load ${f.name}: ${e.message}`, 'error');
+    }
+  }
+  mergeBtn.disabled=files.length<2;
+}
+
+clearBtn.onclick = () => {
+  files = [];
+  fileList.innerHTML = '';
+
+  logPanel.innerHTML = '';
+  logPanel.classList.remove('visible');
+  progressHint.classList.remove('visible');
+  mergeBtn.disabled = true;
+};
+
+mergeBtn.onclick=()=>{
+  logPanel.innerHTML='';
+  logPanel.classList.remove('visible');
+  progressHint.classList.add('visible');
+
+  log('Merge started','info');
+  log(`Total receipt files selected: ${files.length}`,'info');
+
+  log('', 'info');
+
+  files.forEach((f, idx) => {
+    const { minDate, maxDate } = getReceiptDateRange(f.data);
+
+    const idxStr = String(idx + 1).padStart(2, ' ');
+    const cntStr = String(f.data.length).padStart(5, ' ');
+
+    log(` ${idxStr}. ${f.name}`, 'info');
+    log(`     ↳ ${cntStr} Receipts · ${minDate && maxDate ? `${minDate} → ${maxDate}` : 'Date range unavailable'}`,'info');
+    log('', 'info');
+  });
+  
+  const map=new Map();
+  let skipped=0;
+  let totalInput = 0;
+
+  files.forEach((f, idx) => {
+    f.data.forEach(r=>{
+      totalInput++;
+      if(!r.transactionBarcode){skipped++;return;}
+
+      const key = r.membershipNumber + '-' + r.transactionBarcode;
+      if(!map.has(key)){
+        map.set(key, {...r});
+      } else {
+        map.set(key, mergeReceipt(map.get(key), r));
+      }
+    });
+  });
+
+  // log('', 'info');
+  log(`Total receipts across all files: ${totalInput}`,'info');
+
+  if(skipped){
+    log(`Skipped ${skipped} receipts: Missing transactionBarcode`,'warning');
+  }
+
+  log(`Merged into ${map.size} unique receipts`,'info');
+
+  const normalized = [...map.values()].map(normalizeReceipt);
+
+  // Sort Receipts Oldest -> Newest
+  normalized.sort((a, b) => {
+    if (!a.transactionDateTime && !b.transactionDateTime) return 0;
+    if (!a.transactionDateTime) return 1;
+    if (!b.transactionDateTime) return -1;
+    return new Date(a.transactionDateTime) - new Date(b.transactionDateTime);
+  });
+  log('', 'info');
+  log('Merge complete','success');
+  log(` ↳ ${map.size} unique receipts produced`,'success');
+  progressHint.classList.remove('visible');
+  mergeBtn.disabled = true;
+  download(normalized);
+};
+
+function download(data){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const today = new Date().toISOString().slice(0,10);
+  a.download = `Costco_Receipts_MERGED_${today}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  log(` ↳ Output file: ${a.download}`,'success');
+}
+</script>
 </body>
 </html>
