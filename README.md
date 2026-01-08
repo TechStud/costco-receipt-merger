@@ -25,7 +25,7 @@ All processing is done **locally in your browser** — no data ever leaves your 
 
 ### Option A - Use Hosted Version
 
-Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https://TechStud.github.io/costco-receipt-merger/)**
+- Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https://TechStud.github.io/costco-receipt-merger/)**
 
 ### Option B - Run Locally
 
@@ -34,14 +34,16 @@ Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https
    git clone https://github.com/TechStud/costco-receipt-merger.git
 ```
 
-2. Open `index.html` in any modern browser (Safari, Chrome, Firefox, Edge)
+2. Open the Costco Receipt Merger `index.html` in any modern browser (Safari, Chrome, Firefox, Edge)
 
 3. Start merging your receipt files!
 
 ## 📖 How to Use
 
+**NOTE:** The **_Costco Receipt Merger_** tool assumes you already have two or more Costco Receipt JSON files to select, in order to work.
+
 1. **Add Receipt Files**
-   - Drag and drop your JSON receipt files into the drop zone
+   - Drag and drop two or more of your Costco Receipt JSON files into the drop zone
    - Or click the drop zone to browse and select files
 
 2. **Review Files**
@@ -60,17 +62,17 @@ Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https
 
 ```
 [9:21:36 AM] Merge started
-[9:21:36 AM] Total receipt files selected: 5
+[9:21:36 AM] Total receipt files selected: 2
 
-[9:21:36 AM]  1. costco-receipts-2025-11-21.json
+[9:21:36 AM]  1. costco-receipts-2025-02-24.json
 [9:21:36 AM]     ↳     9 Receipts · 2025-02-01 → 2025-02-22
 [9:21:36 AM]  2. costco-receipts-2025-11-18.json
-[9:21:36 AM]     ↳    89 Receipts · 2025-01-02 → 2025-11-15
+[9:21:36 AM]     ↳   857 Receipts · 2022-01-02 → 2025-11-15
 
 [9:21:36 AM] Total receipts across all files: 866
 
 [9:21:36 AM] Merge complete
-[9:21:36 AM] ↳ 261 unique receipts produced
+[9:21:36 AM] ↳ 861 unique receipts produced
 [9:21:36 AM] ↳ Output file: Costco_Receipts_MERGED_2026-01-07.json
 ```
 
@@ -103,28 +105,6 @@ Visit the live tool: **[https://TechStud.github.io/costco-receipt-merger/](https
 If you need to **download** your Costco receipts first, visit this tool:
 - **Costco Receipt Downloader (TCRD)**
 https://techstud.github.io/TCRDD/Downloader/
-
-This **Costco Receipt Merger** tool assumes you already have multiple Costco receipt JSON files ready to use.
-
-
-### Data Structure
-
-The tool expects Costco receipt JSON files with this structure:
-```json
-[
-  {
-    "transactionBarcode": "...",
-    "membershipNumber": "...",
-    "transactionDateTime": "...",
-    "warehouseName": "...",
-    "total": "...",
-    "itemArray": [...],
-    "tenderArray": [...],
-    "subTaxes": {...}
-    ...
-  }
-]
-```
 
 ## 🎯 Use Cases
 
